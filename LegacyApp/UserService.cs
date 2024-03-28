@@ -6,19 +6,14 @@ namespace LegacyApp
     {
         public bool AddUser(string firstName, string lastName, string email, DateTime dateOfBirth, int clientId)
         {
-            if (string.IsNullOrEmpty(firstName) || string.IsNullOrEmpty(lastName))
+            if (!IsFirstNameCorrect(firstName) || !IsLastNameCorrect(lastName))
             {
                 return false;
             }
 
-            if (!email.Contains("@") && !email.Contains("."))
-            {
-                return false;
-            }
+            if (!IsEmailCorrect(email)) return false;
 
-            var now = DateTime.Now;
-            int age = now.Year - dateOfBirth.Year;
-            if (now.Month < dateOfBirth.Month || (now.Month == dateOfBirth.Month && now.Day < dateOfBirth.Day)) age--;
+            var age = CalculatingAgeTillNowUsingBirthdate(dateOfBirth);
 
             if (age < 21)
             {
@@ -37,28 +32,7 @@ namespace LegacyApp
                 LastName = lastName
             };
 
-            if (client.Type == "VeryImportantClient")
-            {
-                user.HasCreditLimit = false;
-            }
-            else if (client.Type == "ImportantClient")
-            {
-                using (var userCreditService = new UserCreditService())
-                {
-                    int creditLimit = userCreditService.GetCreditLimit(user.LastName, user.DateOfBirth);
-                    creditLimit = creditLimit * 2;
-                    user.CreditLimit = creditLimit;
-                }
-            }
-            else
-            {
-                user.HasCreditLimit = true;
-                using (var userCreditService = new UserCreditService())
-                {
-                    int creditLimit = userCreditService.GetCreditLimit(user.LastName, user.DateOfBirth);
-                    user.CreditLimit = creditLimit;
-                }
-            }
+            SetUserCreditLimitByUserImportance(client, user);
 
             if (user.HasCreditLimit && user.CreditLimit < 500)
             {
@@ -67,6 +41,64 @@ namespace LegacyApp
 
             UserDataAccess.AddUser(user);
             return true;
+        }
+
+        private static void SetUserCreditLimitByUserImportance(Client client, User user)
+        {
+            switch (client.Type)
+            {
+                case "VeryImportantClient":
+                    user.HasCreditLimit = false;
+                    break;
+                case "ImportantClient":
+                {
+                    using (var userCreditService = new UserCreditService())
+                    {
+                        int creditLimit = userCreditService.GetCreditLimit(user.LastName, user.DateOfBirth);
+                        user.CreditLimit = creditLimit * 2;
+                    }
+
+                    break;
+                }
+                default:
+                {
+                    user.HasCreditLimit = true;
+                    using (var userCreditService = new UserCreditService())
+                    {
+                        user.CreditLimit = userCreditService.GetCreditLimit(user.LastName, user.DateOfBirth);
+                    }
+
+                    break;
+                }
+            }
+        }
+
+        private static int CalculatingAgeTillNowUsingBirthdate(DateTime dateOfBirth)
+        {
+            var now = DateTime.Now;
+            int age = now.Year - dateOfBirth.Year;
+            if (now.Month < dateOfBirth.Month || (now.Month == dateOfBirth.Month && now.Day < dateOfBirth.Day)) age--;
+            return age;
+        }
+
+        private static bool IsEmailCorrect(string email)
+        {
+            if (!email.Contains("@") && !email.Contains("."))
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        private static bool IsLastNameCorrect(string lastName)
+        {
+            return string.IsNullOrEmpty(lastName);
+        }
+
+        private static bool IsFirstNameCorrect(string firstName)
+        {
+            return string.IsNullOrEmpty(firstName);
         }
     }
 }
