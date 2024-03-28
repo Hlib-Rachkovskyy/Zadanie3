@@ -6,12 +6,15 @@ namespace LegacyApp
     {
         public bool AddUser(string firstName, string lastName, string email, DateTime dateOfBirth, int clientId)
         {
-            if (!IsFirstNameCorrect(firstName) || !IsLastNameCorrect(lastName))
+            if (IsFirstNameNotCorrect(firstName) || IsLastNameNotCorrect(lastName))
             {
                 return false;
             }
 
-            if (!IsEmailCorrect(email)) return false;
+            if (IsEmailNotCorrect(email))
+            {
+                return false;
+            }
 
             var age = CalculatingAgeTillNowUsingBirthdate(dateOfBirth);
 
@@ -81,22 +84,22 @@ namespace LegacyApp
             return age;
         }
 
-        private static bool IsEmailCorrect(string email)
+        private static bool IsEmailNotCorrect(string email)
         {
             if (!email.Contains("@") && !email.Contains("."))
             {
-                return false;
+                return true;
             }
 
-            return true;
+            return false;
         }
 
-        private static bool IsLastNameCorrect(string lastName)
+        private static bool IsLastNameNotCorrect(string lastName)
         {
             return string.IsNullOrEmpty(lastName);
         }
 
-        private static bool IsFirstNameCorrect(string firstName)
+        private static bool IsFirstNameNotCorrect(string firstName)
         {
             return string.IsNullOrEmpty(firstName);
         }
