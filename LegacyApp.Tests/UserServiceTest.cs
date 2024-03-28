@@ -19,6 +19,17 @@ public class UserServiceTest
         // Assert
         Assert.False(addResult);
     }
+    
+    [Fact]
+    public void AddUser_Should_Return_False_When_LastName_Is_Missing()
+    {
+        // Arrange
+        var userService = new UserService();
+        // Act
+        var addResult = userService.AddUser("John", "", "johndoe@gmail.com", DateTime.Parse("1982-03-21"), 1);
+        // Assert
+        Assert.False(addResult);
+    }
 
 
     [Fact]
